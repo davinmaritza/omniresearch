@@ -1,0 +1,63 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "omniresearch"
+version = "0.1.0"
+description = "Enterprise Autonomous Deep Research & Fact-Checked Intelligence Engine"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+authors = [
+    { name = "Davin Maritza", email = "alfarrezald@gmail.com" }
+]
+keywords = [
+    "deep-research",
+    "autonomous-agents",
+    "langgraph",
+    "market-intelligence",
+    "fact-checking",
+    "enterprise-ai",
+    "multi-agent",
+    "research-agent"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.2.0",
+    "langchain-core>=0.2.0",
+    "langgraph>=0.2.0",
+    "duckduckgo-search>=6.0.0",
+    "typer>=0.12.0",
+    "rich>=13.7.0",
+    "streamlit>=1.36.0",
+    "pymupdf>=1.24.0",
+    "python-docx>=1.1.0",
+    "reportlab>=4.2.0",
+    "httpx>=0.27.0",
+    "beautifulsoup4>=4.12.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.4.0",
+]
+
+[project.scripts]
+omniresearch = "omniresearch.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/omniresearch"]
