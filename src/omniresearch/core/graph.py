@@ -1,18 +1,17 @@
 """State Machine Graph Orchestration for OmniResearch."""
 
-from typing import List, Optional
-from omniresearch.core.state import ResearchState, ResearchReport
 from omniresearch.agents.planner import plan_research_step
 from omniresearch.agents.researcher import research_step
 from omniresearch.agents.verifier import verify_facts_step
 from omniresearch.agents.writer import write_report_step
+from omniresearch.core.state import ResearchState
 
 
 def run_research(
     topic: str,
-    uploaded_files: Optional[List[str]] = None,
+    uploaded_files: list[str] | None = None,
     max_iterations: int = 1,
-    progress_callback = None
+    progress_callback=None,
 ) -> ResearchState:
     """Execute the end-to-end multi-agent research pipeline."""
     state = ResearchState(
@@ -28,17 +27,23 @@ def run_research(
 
     # 2. Research & Hybrid Retrieval Phase
     if progress_callback:
-        progress_callback("🌐 Researcher Agent: Collecting public web & internal document evidence...", 0.45)
+        progress_callback(
+            "🌐 Researcher Agent: Collecting public web & internal document evidence...", 0.45
+        )
     state = research_step(state)
 
     # 3. Fact-Checking & Verification Phase
     if progress_callback:
-        progress_callback("🛡️ Verifier Agent: Cross-referencing claims & confidence scoring...", 0.75)
+        progress_callback(
+            "🛡️ Verifier Agent: Cross-referencing claims & confidence scoring...", 0.75
+        )
     state = verify_facts_step(state)
 
     # 4. Executive Dossier Synthesis Phase
     if progress_callback:
-        progress_callback("✍️ Executive Writer: Compiling verified dossier & recommendations...", 0.95)
+        progress_callback(
+            "✍️ Executive Writer: Compiling verified dossier & recommendations...", 0.95
+        )
     state = write_report_step(state)
 
     if progress_callback:
@@ -50,8 +55,8 @@ def run_research(
 def create_research_graph():
     """Return LangGraph StateGraph instance if available."""
     try:
-        from langgraph.graph import StateGraph, START, END
-        
+        from langgraph.graph import END, START, StateGraph
+
         builder = StateGraph(ResearchState)
         builder.add_node("planner", plan_research_step)
         builder.add_node("researcher", research_step)
@@ -63,7 +68,7 @@ def create_research_graph():
         builder.add_edge("researcher", "verifier")
         builder.add_edge("verifier", "writer")
         builder.add_edge("writer", END)
-        
+
         return builder.compile()
     except Exception as exc:
         print(f"[OmniResearch Graph Info] Using direct state pipeline: {exc}")

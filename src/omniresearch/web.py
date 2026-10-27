@@ -3,16 +3,17 @@
 import os
 import sys
 import tempfile
+
 import streamlit as st
 
 # Ensure src is on sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from omniresearch.core.graph import run_research
-from omniresearch.exporters.markdown import format_markdown, export_markdown_file
-from omniresearch.exporters.docx import export_docx_file
-from omniresearch.exporters.pdf import export_pdf_file
 from omniresearch.config import get_settings
+from omniresearch.core.graph import run_research
+from omniresearch.exporters.docx import export_docx_file
+from omniresearch.exporters.markdown import export_markdown_file, format_markdown
+from omniresearch.exporters.pdf import export_pdf_file
 
 st.set_page_config(
     page_title="OmniResearch — Enterprise Intelligence Engine",
@@ -22,7 +23,8 @@ st.set_page_config(
 )
 
 # Custom Styling
-st.markdown("""
+st.markdown(
+    """
 <style>
     .main-header {
         font-size: 2.2rem;
@@ -42,27 +44,29 @@ st.markdown("""
         border: 1px solid #E2E8F0;
     }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # Sidebar
 with st.sidebar:
     st.image("https://img.icons8.com/isometric/100/search.png", width=64)
     st.markdown("### ⚙️ Engine Settings")
-    
+
     settings = get_settings()
     llm_provider = st.selectbox(
         "LLM Provider",
         ["gemini", "openai", "anthropic", "ollama"],
-        index=["gemini", "openai", "anthropic", "ollama"].index(settings.llm_provider)
+        index=["gemini", "openai", "anthropic", "ollama"].index(settings.llm_provider),
     )
-    
+
     search_provider = st.selectbox(
         "Search Provider",
         ["duckduckgo", "tavily", "exa"],
         index=["duckduckgo", "tavily", "exa"].index(settings.search_provider),
-        help="DuckDuckGo is built-in and free without API keys."
+        help="DuckDuckGo is built-in and free without API keys.",
     )
-    
+
     st.divider()
     st.markdown("### 📂 Enterprise Document Ingestion")
     uploaded_files = st.file_uploader(
@@ -70,12 +74,15 @@ with st.sidebar:
         type=["pdf", "docx", "csv", "txt", "md"],
         accept_multiple_files=True,
     )
-    
+
     st.caption("🔒 All documents are processed locally or in memory.")
 
 # Main Interface
 st.markdown('<div class="main-header">🔍 OmniResearch</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-header">Enterprise Autonomous Deep Research & Fact-Checked Intelligence Engine</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="sub-header">Enterprise Autonomous Deep Research & Fact-Checked Intelligence Engine</div>',
+    unsafe_allow_html=True,
+)
 
 # Example Presets
 col_preset1, col_preset2, col_preset3 = st.columns(3)
@@ -83,9 +90,13 @@ preset_topic = ""
 if col_preset1.button("⚡ AI Chip Competitor Dynamics: Nvidia vs Custom Silicon"):
     preset_topic = "AI Chip Market Dynamics: Nvidia Blackwell vs AMD MI300X vs Google TPU v5e"
 if col_preset2.button("🛡️ Enterprise Cyber Insurance & Ransomware 2026"):
-    preset_topic = "Enterprise Cyber Insurance Underwriting Trends and Ransomware Claim Volatility 2026"
+    preset_topic = (
+        "Enterprise Cyber Insurance Underwriting Trends and Ransomware Claim Volatility 2026"
+    )
 if col_preset3.button("📱 Small Language Models (SLMs) On-Device"):
-    preset_topic = "Small Language Models (SLMs) Benchmarks and On-Device Edge Deployment in Enterprise"
+    preset_topic = (
+        "Small Language Models (SLMs) Benchmarks and On-Device Edge Deployment in Enterprise"
+    )
 
 topic_input = st.text_input(
     "Enter Research Topic or Executive Inquiry:",
@@ -126,7 +137,7 @@ if start_btn and topic_input.strip():
 
     if state.report:
         rep = state.report
-        
+
         # Metrics Row
         m_col1, m_col2, m_col3 = st.columns(3)
         m_col1.metric("Empirical Confidence Score", f"{rep.average_confidence_score}%")
@@ -136,12 +147,14 @@ if start_btn and topic_input.strip():
         st.divider()
 
         # Tabs for Deliverables
-        tab_dossier, tab_factcheck, tab_sources, tab_download = st.tabs([
-            "📋 Executive Dossier",
-            "🛡️ Fact-Check Matrix",
-            "📚 Primary Sources",
-            "⬇️ Export Deliverables",
-        ])
+        tab_dossier, tab_factcheck, tab_sources, tab_download = st.tabs(
+            [
+                "📋 Executive Dossier",
+                "🛡️ Fact-Check Matrix",
+                "📚 Primary Sources",
+                "⬇️ Export Deliverables",
+            ]
+        )
 
         with tab_dossier:
             st.markdown(format_markdown(rep), unsafe_allow_html=True)
@@ -172,11 +185,11 @@ if start_btn and topic_input.strip():
 
         with tab_download:
             st.subheader("Download Formatted Corporate Deliverables")
-            
+
             # Prepare files in temp
             out_temp = tempfile.mkdtemp()
             clean_name = "omniresearch_dossier"
-            
+
             # Markdown
             md_path = os.path.join(out_temp, f"{clean_name}.md")
             export_markdown_file(rep, md_path)
@@ -196,6 +209,24 @@ if start_btn and topic_input.strip():
                 pdf_bytes = f.read()
 
             d_col1, d_col2, d_col3 = st.columns(3)
-            d_col1.download_button("📄 Download Markdown (.md)", data=md_bytes, file_name=f"{clean_name}.md", mime="text/markdown", use_container_width=True)
-            d_col2.download_button("📘 Download Word (.docx)", data=docx_bytes, file_name=f"{clean_name}.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document", use_container_width=True)
-            d_col3.download_button("📕 Download Executive PDF (.pdf)", data=pdf_bytes, file_name=f"{clean_name}.pdf", mime="application/pdf", use_container_width=True)
+            d_col1.download_button(
+                "📄 Download Markdown (.md)",
+                data=md_bytes,
+                file_name=f"{clean_name}.md",
+                mime="text/markdown",
+                use_container_width=True,
+            )
+            d_col2.download_button(
+                "📘 Download Word (.docx)",
+                data=docx_bytes,
+                file_name=f"{clean_name}.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                use_container_width=True,
+            )
+            d_col3.download_button(
+                "📕 Download Executive PDF (.pdf)",
+                data=pdf_bytes,
+                file_name=f"{clean_name}.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+            )

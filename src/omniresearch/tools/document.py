@@ -1,20 +1,21 @@
 """Document parser for enterprise local documents: PDF, DOCX, CSV, TXT, MD."""
 
-import os
 import csv
-from typing import List
+import os
+
 from omniresearch.core.state import SourceDocument
 
 
-def parse_pdf(file_path: str, start_id: int = 1) -> List[SourceDocument]:
+def parse_pdf(file_path: str, start_id: int = 1) -> list[SourceDocument]:
     """Extract text from PDF pages with citation tracking."""
-    documents: List[SourceDocument] = []
+    documents: list[SourceDocument] = []
     try:
         import fitz  # PyMuPDF
+
         doc = fitz.open(file_path)
         base_name = os.path.basename(file_path)
         cur_id = start_id
-        
+
         for page_num in range(len(doc)):
             page = doc[page_num]
             text = page.get_text().strip()
@@ -36,18 +37,19 @@ def parse_pdf(file_path: str, start_id: int = 1) -> List[SourceDocument]:
     return documents
 
 
-def parse_docx(file_path: str, start_id: int = 1) -> List[SourceDocument]:
+def parse_docx(file_path: str, start_id: int = 1) -> list[SourceDocument]:
     """Extract text from Word DOCX documents."""
-    documents: List[SourceDocument] = []
+    documents: list[SourceDocument] = []
     try:
         from docx import Document
+
         doc = Document(file_path)
         base_name = os.path.basename(file_path)
         full_text = []
         for p in doc.paragraphs:
             if p.text.strip():
                 full_text.append(p.text.strip())
-        
+
         joined = "\n\n".join(full_text)
         if joined:
             documents.append(
@@ -65,9 +67,9 @@ def parse_docx(file_path: str, start_id: int = 1) -> List[SourceDocument]:
     return documents
 
 
-def parse_csv(file_path: str, start_id: int = 1) -> List[SourceDocument]:
+def parse_csv(file_path: str, start_id: int = 1) -> list[SourceDocument]:
     """Extract summary rows from CSV files."""
-    documents: List[SourceDocument] = []
+    documents: list[SourceDocument] = []
     try:
         base_name = os.path.basename(file_path)
         rows_summary = []
@@ -81,7 +83,7 @@ def parse_csv(file_path: str, start_id: int = 1) -> List[SourceDocument]:
                     rows_summary.append(" | ".join(row))
                 else:
                     break
-        
+
         if rows_summary:
             documents.append(
                 SourceDocument(
@@ -98,9 +100,9 @@ def parse_csv(file_path: str, start_id: int = 1) -> List[SourceDocument]:
     return documents
 
 
-def parse_text(file_path: str, start_id: int = 1) -> List[SourceDocument]:
+def parse_text(file_path: str, start_id: int = 1) -> list[SourceDocument]:
     """Read plain text or Markdown files."""
-    documents: List[SourceDocument] = []
+    documents: list[SourceDocument] = []
     try:
         base_name = os.path.basename(file_path)
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
@@ -121,7 +123,7 @@ def parse_text(file_path: str, start_id: int = 1) -> List[SourceDocument]:
     return documents
 
 
-def parse_document(file_path: str, start_id: int = 1) -> List[SourceDocument]:
+def parse_document(file_path: str, start_id: int = 1) -> list[SourceDocument]:
     """Universal document dispatcher based on extension."""
     ext = os.path.splitext(file_path)[1].lower()
     if ext == ".pdf":

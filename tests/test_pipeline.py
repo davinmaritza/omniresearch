@@ -2,15 +2,17 @@
 
 import os
 import tempfile
-import pytest
-from omniresearch.core.state import ResearchState, SourceDocument, FactCheckClaim, ResearchReport, ReportSection
-from omniresearch.agents.planner import plan_research_step
-from omniresearch.agents.researcher import research_step
-from omniresearch.agents.verifier import verify_facts_step
-from omniresearch.agents.writer import write_report_step
+
 from omniresearch.core.graph import run_research
-from omniresearch.exporters.markdown import format_markdown, export_markdown_file
+from omniresearch.core.state import (
+    FactCheckClaim,
+    ReportSection,
+    ResearchReport,
+    ResearchState,
+    SourceDocument,
+)
 from omniresearch.exporters.docx import export_docx_file
+from omniresearch.exporters.markdown import export_markdown_file
 from omniresearch.exporters.pdf import export_pdf_file
 
 
@@ -46,10 +48,13 @@ def test_exporters():
             ReportSection(
                 heading="ROI and Operational Metrics",
                 content="Companies report 32% efficiency gains in customer engineering [Source 1].",
-                citations=[1]
+                citations=[1],
             )
         ],
-        key_findings=["32% measured productivity uplift", "Strict data privacy requirements observed"],
+        key_findings=[
+            "32% measured productivity uplift",
+            "Strict data privacy requirements observed",
+        ],
         strategic_recommendations=["Standardize on model-agnostic gateways"],
         fact_check_summary=[
             FactCheckClaim(
@@ -57,7 +62,7 @@ def test_exporters():
                 source_id=1,
                 status="verified",
                 confidence_score=94.0,
-                verification_rationale="Verified by case study excerpts"
+                verification_rationale="Verified by case study excerpts",
             )
         ],
         sources=[
@@ -66,10 +71,10 @@ def test_exporters():
                 title="Enterprise AI Report 2026",
                 url_or_path="https://example.com/ai-report",
                 snippet="In a survey of 500 enterprises, measured efficiency gains reached 32% in engineering.",
-                source_type="web"
+                source_type="web",
             )
         ],
-        average_confidence_score=94.0
+        average_confidence_score=94.0,
     )
 
     with tempfile.TemporaryDirectory() as tmpdir:

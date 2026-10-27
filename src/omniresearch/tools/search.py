@@ -1,21 +1,22 @@
 """Search tool integrations supporting DuckDuckGo (zero-cost default), Tavily, and Exa."""
 
-from typing import List, Dict, Any, Optional
 import httpx
+
 try:
     from ddgs import DDGS
 except ImportError:
     import warnings
+
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", RuntimeWarning)
         from duckduckgo_search import DDGS
-from omniresearch.core.state import SourceDocument
 from omniresearch.config import get_settings
+from omniresearch.core.state import SourceDocument
 
 
-def search_duckduckgo(query: str, max_results: int = 5, start_id: int = 1) -> List[SourceDocument]:
+def search_duckduckgo(query: str, max_results: int = 5, start_id: int = 1) -> list[SourceDocument]:
     """Execute zero-cost search via DuckDuckGo."""
-    documents: List[SourceDocument] = []
+    documents: list[SourceDocument] = []
     try:
         with DDGS() as ddgs:
             results = list(ddgs.text(query, max_results=max_results))
@@ -36,9 +37,11 @@ def search_duckduckgo(query: str, max_results: int = 5, start_id: int = 1) -> Li
     return documents
 
 
-def search_tavily(query: str, api_key: str, max_results: int = 5, start_id: int = 1) -> List[SourceDocument]:
+def search_tavily(
+    query: str, api_key: str, max_results: int = 5, start_id: int = 1
+) -> list[SourceDocument]:
     """Execute search via Tavily API for enterprise search."""
-    documents: List[SourceDocument] = []
+    documents: list[SourceDocument] = []
     try:
         url = "https://api.tavily.com/search"
         payload = {
@@ -68,12 +71,14 @@ def search_tavily(query: str, api_key: str, max_results: int = 5, start_id: int 
     return documents
 
 
-def search_hybrid(query: str, max_results: int = 5, start_id: int = 1) -> List[SourceDocument]:
+def search_hybrid(query: str, max_results: int = 5, start_id: int = 1) -> list[SourceDocument]:
     """Smart hybrid search router: uses Tavily/Exa if configured, else DuckDuckGo zero-cost."""
     settings = get_settings()
-    
+
     if settings.search_provider == "tavily" and settings.tavily_api_key:
-        docs = search_tavily(query, settings.tavily_api_key, max_results=max_results, start_id=start_id)
+        docs = search_tavily(
+            query, settings.tavily_api_key, max_results=max_results, start_id=start_id
+        )
         if docs:
             return docs
 

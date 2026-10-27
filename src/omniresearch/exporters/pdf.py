@@ -1,10 +1,12 @@
 """PDF Exporter for OmniResearch Executive Dossiers using ReportLab."""
 
 import os
-from reportlab.lib.pagesizes import letter
+
 from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
 from omniresearch.core.state import ResearchReport
 
 
@@ -21,43 +23,43 @@ def export_pdf_file(report: ResearchReport, output_path: str) -> str:
     )
 
     styles = getSampleStyleSheet()
-    
+
     # Custom Corporate Styles
     title_style = ParagraphStyle(
-        'DocTitle',
-        parent=styles['Heading1'],
-        fontName='Helvetica-Bold',
+        "DocTitle",
+        parent=styles["Heading1"],
+        fontName="Helvetica-Bold",
         fontSize=20,
         leading=24,
-        textColor=colors.HexColor('#0F172A'),
+        textColor=colors.HexColor("#0F172A"),
         spaceAfter=6,
     )
     meta_style = ParagraphStyle(
-        'DocMeta',
-        parent=styles['Normal'],
-        fontName='Helvetica-Oblique',
+        "DocMeta",
+        parent=styles["Normal"],
+        fontName="Helvetica-Oblique",
         fontSize=9,
         leading=12,
-        textColor=colors.HexColor('#64748B'),
+        textColor=colors.HexColor("#64748B"),
         spaceAfter=14,
     )
     h1_style = ParagraphStyle(
-        'DocH1',
-        parent=styles['Heading2'],
-        fontName='Helvetica-Bold',
+        "DocH1",
+        parent=styles["Heading2"],
+        fontName="Helvetica-Bold",
         fontSize=13,
         leading=16,
-        textColor=colors.HexColor('#1E293B'),
+        textColor=colors.HexColor("#1E293B"),
         spaceBefore=12,
         spaceAfter=6,
     )
     body_style = ParagraphStyle(
-        'DocBody',
-        parent=styles['Normal'],
-        fontName='Helvetica',
+        "DocBody",
+        parent=styles["Normal"],
+        fontName="Helvetica",
         fontSize=10,
         leading=14,
-        textColor=colors.HexColor('#334155'),
+        textColor=colors.HexColor("#334155"),
         spaceAfter=8,
     )
 
@@ -65,7 +67,12 @@ def export_pdf_file(report: ResearchReport, output_path: str) -> str:
 
     # Title & Metadata
     story.append(Paragraph(f"Executive Dossier: {report.topic}", title_style))
-    story.append(Paragraph(f"OmniResearch Engine | {report.generated_at} | Confidence Score: {report.average_confidence_score}%", meta_style))
+    story.append(
+        Paragraph(
+            f"OmniResearch Engine | {report.generated_at} | Confidence Score: {report.average_confidence_score}%",
+            meta_style,
+        )
+    )
     story.append(Spacer(1, 10))
 
     # 1. Executive Summary
@@ -99,23 +106,29 @@ def export_pdf_file(report: ResearchReport, output_path: str) -> str:
         table_data = [["Claim / Metric", "Status", "Confidence", "Source"]]
         for c in report.fact_check_summary[:8]:
             short_claim = c.claim_text[:50] + "..." if len(c.claim_text) > 50 else c.claim_text
-            table_data.append([
-                short_claim,
-                c.status.upper(),
-                f"{c.confidence_score}%",
-                f"Source {c.source_id}" if c.source_id else "Corroborated"
-            ])
-        
+            table_data.append(
+                [
+                    short_claim,
+                    c.status.upper(),
+                    f"{c.confidence_score}%",
+                    f"Source {c.source_id}" if c.source_id else "Corroborated",
+                ]
+            )
+
         t = Table(table_data, colWidths=[240, 80, 80, 100])
-        t.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#F1F5F9')),
-            ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor('#0F172A')),
-            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0,0), (-1,-1), 8),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 4),
-            ('TOPPADDING', (0,0), (-1,-1), 4),
-            ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#CBD5E1')),
-        ]))
+        t.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#F1F5F9")),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#0F172A")),
+                    ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                    ("FONTSIZE", (0, 0), (-1, -1), 8),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                    ("TOPPADDING", (0, 0), (-1, -1), 4),
+                    ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E1")),
+                ]
+            )
+        )
         story.append(t)
         story.append(Spacer(1, 12))
 

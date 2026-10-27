@@ -1,10 +1,7 @@
 """Verifier & Fact-Checker Agent: Audits factual assertions and calculates confidence scores."""
 
-import json
-from typing import List
-from omniresearch.core.state import ResearchState, FactCheckClaim
-from omniresearch.core.llm import get_llm_client
-
+from omniresearch.core.llm import extract_json_payload, get_llm_client
+from omniresearch.core.state import FactCheckClaim, ResearchState
 
 VERIFIER_SYSTEM_PROMPT = """You are a rigorous enterprise fact-checker and intelligence auditor.
 Given a list of retrieved evidence snippets from web searches and corporate files, extract the 3 to 6 most critical factual, statistical, or analytical claims.
@@ -32,30 +29,27 @@ Output strictly valid JSON with this format:
 def verify_facts_step(state: ResearchState) -> ResearchState:
     """Execute the Verifier & Fact-Checker Agent step."""
     llm = get_llm_client()
-    state.activity_log.append("🛡️ [Verifier] Auditing candidate claims against primary source evidence...")
+    state.activity_log.append(
+        "🛡️ [Verifier] Auditing candidate claims against primary source evidence..."
+    )
 
     # Compile a digest of top snippets for verification
     evidence_digest = []
     for doc in state.sources[:10]:  # Top 10 sources
-        evidence_digest.append(f"[Source {doc.id} - {doc.title} ({doc.source_type})]: {doc.snippet[:350]}")
-    
+        evidence_digest.append(
+            f"[Source {doc.id} - {doc.title} ({doc.source_type})]: {doc.snippet[:350]}"
+        )
+
     context_str = "\n".join(evidence_digest)
     prompt = f"Topic: {state.topic}\n\nEvidence Excerpts:\n{context_str}\n\nAudit key claims and produce confidence scores."
 
-    response_text = llm.generate(prompt=prompt, system_prompt=VERIFIER_SYSTEM_PROMPT, json_mode=True)
-    
-    verified_claims: List[FactCheckClaim] = []
-    try:
-        clean_text = response_text.strip()
-        if clean_text.startswith("```json"):
-            clean_text = clean_text[7:]
-        if clean_text.startswith("```"):
-            clean_text = clean_text[3:]
-        if clean_text.endswith("```"):
-            clean_text = clean_text[:-3]
-        clean_text = clean_text.strip()
+    response_text = llm.generate(
+        prompt=prompt, system_prompt=VERIFIER_SYSTEM_PROMPT, json_mode=True
+    )
 
-        data = json.loads(clean_text)
+    verified_claims: list[FactCheckClaim] = []
+    try:
+        data = extract_json_payload(response_text)
         for item in data.get("claims", []):
             verified_claims.append(
                 FactCheckClaim(
@@ -64,7 +58,9 @@ def verify_facts_step(state: ResearchState) -> ResearchState:
                     source_reference=item.get("source_reference", ""),
                     status=item.get("status", "verified"),
                     confidence_score=float(item.get("confidence_score", 85.0)),
-                    verification_rationale=item.get("rationale", "Verified against primary snippet."),
+                    verification_rationale=item.get(
+                        "rationale", "Verified against primary snippet."
+                    ),
                 )
             )
     except Exception as exc:
@@ -83,5 +79,7 @@ def verify_facts_step(state: ResearchState) -> ResearchState:
             )
 
     state.verified_claims = verified_claims
-    state.activity_log.append(f"✅ [Verifier] Audited {len(verified_claims)} key claims with verifiable confidence scores.")
+    state.activity_log.append(
+        f"✅ [Verifier] Audited {len(verified_claims)} key claims with verifiable confidence scores."
+    )
     return state

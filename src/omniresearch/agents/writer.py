@@ -1,10 +1,7 @@
 """Writer Agent: Synthesizes verified intelligence into a publication-ready Executive Dossier."""
 
-import json
-from typing import List
-from omniresearch.core.state import ResearchState, ResearchReport, ReportSection
-from omniresearch.core.llm import get_llm_client
-
+from omniresearch.core.llm import extract_json_payload, get_llm_client
+from omniresearch.core.state import ReportSection, ResearchReport, ResearchState
 
 WRITER_SYSTEM_PROMPT = """You are a senior executive intelligence director and principal research author.
 Synthesize verified research evidence into a comprehensive, high-stakes corporate dossier.
@@ -51,8 +48,10 @@ def write_report_step(state: ResearchState) -> ResearchState:
     # Compile verified evidence context
     verified_context = []
     for c in state.verified_claims:
-        verified_context.append(f"- Claim: {c.claim_text} (Confidence: {c.confidence_score}%, Status: {c.status})")
-    
+        verified_context.append(
+            f"- Claim: {c.claim_text} (Confidence: {c.confidence_score}%, Status: {c.status})"
+        )
+
     source_summaries = []
     for s in state.sources[:8]:
         source_summaries.append(f"[Source {s.id}] {s.title} ({s.url_or_path}): {s.snippet[:200]}")
@@ -60,24 +59,15 @@ def write_report_step(state: ResearchState) -> ResearchState:
     prompt = (
         f"Research Inquiry: {state.topic}\n\n"
         f"Verified Facts & Claims:\n" + "\n".join(verified_context) + "\n\n"
-        f"Available Sources:\n" + "\n".join(source_summaries) + "\n\n"
+        "Available Sources:\n" + "\n".join(source_summaries) + "\n\n"
         "Draft the full executive dossier in the requested JSON structure."
     )
 
     response_text = llm.generate(prompt=prompt, system_prompt=WRITER_SYSTEM_PROMPT, json_mode=True)
-    
+
     report: ResearchReport
     try:
-        clean_text = response_text.strip()
-        if clean_text.startswith("```json"):
-            clean_text = clean_text[7:]
-        if clean_text.startswith("```"):
-            clean_text = clean_text[3:]
-        if clean_text.endswith("```"):
-            clean_text = clean_text[:-3]
-        clean_text = clean_text.strip()
-
-        data = json.loads(clean_text)
+        data = extract_json_payload(response_text)
         sections = [
             ReportSection(
                 heading=sec.get("heading", "Analysis"),
@@ -88,12 +78,16 @@ def write_report_step(state: ResearchState) -> ResearchState:
         ]
 
         # Calculate average confidence
-        scores = [c.confidence_score for c in state.verified_claims] if state.verified_claims else [85.0]
+        scores = (
+            [c.confidence_score for c in state.verified_claims] if state.verified_claims else [85.0]
+        )
         avg_score = round(sum(scores) / len(scores), 1)
 
         report = ResearchReport(
             topic=state.topic,
-            executive_summary=data.get("executive_summary", "Strategic summary of investigated topic."),
+            executive_summary=data.get(
+                "executive_summary", "Strategic summary of investigated topic."
+            ),
             sections=sections,
             key_findings=data.get("key_findings", []),
             strategic_recommendations=data.get("strategic_recommendations", []),
@@ -103,7 +97,9 @@ def write_report_step(state: ResearchState) -> ResearchState:
         )
     except Exception as exc:
         state.activity_log.append(f"⚠️ [Writer] Fallback report synthesis: {exc}")
-        scores = [c.confidence_score for c in state.verified_claims] if state.verified_claims else [85.0]
+        scores = (
+            [c.confidence_score for c in state.verified_claims] if state.verified_claims else [85.0]
+        )
         avg_score = round(sum(scores) / len(scores), 1)
 
         report = ResearchReport(
@@ -116,10 +112,11 @@ def write_report_step(state: ResearchState) -> ResearchState:
                     citations=[s.id for s in state.sources[:3]],
                 )
             ],
-            key_findings=[c.claim_text for c in state.verified_claims[:3]] or [f"Significant developments observed in {state.topic}."],
+            key_findings=[c.claim_text for c in state.verified_claims[:3]]
+            or [f"Significant developments observed in {state.topic}."],
             strategic_recommendations=[
                 "Deploy continuous telemetry monitoring on core market signals.",
-                "Incorporate verified findings into enterprise strategic roadmaps."
+                "Incorporate verified findings into enterprise strategic roadmaps.",
             ],
             fact_check_summary=state.verified_claims,
             sources=state.sources,

@@ -1,10 +1,10 @@
 """DOCX Word Exporter for OmniResearch Executive Dossiers."""
 
 import os
-from typing import Optional
+
 from docx import Document
-from docx.shared import Inches, Pt, RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Pt, RGBColor
+
 from omniresearch.core.state import ResearchReport
 
 
@@ -27,14 +27,14 @@ def export_docx_file(report: ResearchReport, output_path: str) -> str:
     doc.add_paragraph().paragraph_format.space_after = Pt(12)
 
     # 1. Executive Summary
-    h1 = doc.add_heading("1. Executive Summary", level=1)
+    doc.add_heading("1. Executive Summary", level=1)
     doc.add_paragraph(report.executive_summary)
 
     # 2. Key Findings
     if report.key_findings:
         doc.add_heading("2. Key Strategic Findings", level=1)
         for kf in report.key_findings:
-            doc.add_paragraph(kf, style='List Bullet')
+            doc.add_paragraph(kf, style="List Bullet")
 
     # 3. Analytical Sections
     doc.add_heading("3. In-Depth Analysis", level=1)
@@ -52,12 +52,12 @@ def export_docx_file(report: ResearchReport, output_path: str) -> str:
     if report.fact_check_summary:
         doc.add_heading("5. Fact-Check & Verification Matrix", level=1)
         table = doc.add_table(rows=1, cols=4)
-        table.style = 'Table Grid'
+        table.style = "Table Grid"
         hdr_cells = table.rows[0].cells
-        hdr_cells[0].text = 'Claim / Metric'
-        hdr_cells[1].text = 'Status'
-        hdr_cells[2].text = 'Confidence'
-        hdr_cells[3].text = 'Reference'
+        hdr_cells[0].text = "Claim / Metric"
+        hdr_cells[1].text = "Status"
+        hdr_cells[2].text = "Confidence"
+        hdr_cells[3].text = "Reference"
 
         for claim in report.fact_check_summary:
             row_cells = table.add_row().cells
@@ -70,7 +70,7 @@ def export_docx_file(report: ResearchReport, output_path: str) -> str:
     if report.sources:
         doc.add_heading("6. Primary Evidence & Cited Sources", level=1)
         for s in report.sources:
-            p_src = doc.add_paragraph(style='List Bullet')
+            p_src = doc.add_paragraph(style="List Bullet")
             p_src.add_run(f"[Source {s.id}] {s.title} ({s.source_type.upper()}): ").bold = True
             p_src.add_run(s.url_or_path).italic = True
 

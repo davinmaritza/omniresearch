@@ -1,9 +1,10 @@
 """Configuration management and LLM provider factory for OmniResearch."""
 
 import os
-from typing import Optional, Literal
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Literal
+
 from dotenv import load_dotenv
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 load_dotenv()
 
@@ -14,20 +15,20 @@ class Settings(BaseSettings):
     # Provider configurations
     llm_provider: Literal["gemini", "openai", "anthropic", "ollama"] = "gemini"
     llm_model: str = "gemini-1.5-pro"
-    
+
     # API Keys
-    gemini_api_key: Optional[str] = None
-    openai_api_key: Optional[str] = None
-    anthropic_api_key: Optional[str] = None
-    
+    gemini_api_key: str | None = None
+    openai_api_key: str | None = None
+    anthropic_api_key: str | None = None
+
     # Local LLM
     ollama_base_url: str = "http://localhost:11434"
-    
+
     # Search Provider
     search_provider: Literal["duckduckgo", "tavily", "exa"] = "duckduckgo"
-    tavily_api_key: Optional[str] = None
-    exa_api_key: Optional[str] = None
-    
+    tavily_api_key: str | None = None
+    exa_api_key: str | None = None
+
     # Agent Hyperparameters
     max_research_iterations: int = 3
     max_search_results_per_query: int = 5
@@ -51,6 +52,7 @@ def get_settings() -> Settings:
         exa_api_key=os.getenv("EXA_API_KEY"),
         max_research_iterations=int(os.getenv("MAX_RESEARCH_ITERATIONS", "3")),
         max_search_results_per_query=int(os.getenv("MAX_SEARCH_RESULTS_PER_QUERY", "5")),
-        enable_fact_checking=os.getenv("ENABLE_FACT_CHECKING", "true").lower() in ("true", "1", "yes"),
+        enable_fact_checking=os.getenv("ENABLE_FACT_CHECKING", "true").lower()
+        in ("true", "1", "yes"),
         report_output_dir=os.getenv("REPORT_OUTPUT_DIR", "./reports"),
     )
